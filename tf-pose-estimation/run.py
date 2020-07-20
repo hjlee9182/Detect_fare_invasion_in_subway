@@ -29,7 +29,6 @@ if __name__ == '__main__':
                              'default=0x0, Recommends : 432x368 or 656x368 or 1312x736 ')
     parser.add_argument('--resize-out-ratio', type=float, default=4.0,
                         help='if provided, resize heatmaps before they are post-processed. default=1.0')
-    parse.add_argument('--folder',type=str,default='../data/')
     args = parser.parse_args()
 
     w, h = model_wh(args.resize)
@@ -51,8 +50,8 @@ if __name__ == '__main__':
     logger.info('inference image: %s in %.4f seconds.' % (args.image, elapsed))
 
     image = TfPoseEstimator.draw_humans(image, humans, imgcopy=False)
-    print('hi')
     name = args.image.split('/')[-1]
+    print('name',name)
     try:
         import matplotlib.pyplot as plt
         print('Im in here')
@@ -60,9 +59,9 @@ if __name__ == '__main__':
         a = fig.add_subplot(2, 2, 1)
         a.set_title('Result')
         image2 = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
-        plt.imshow(image2)
         #plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        cv2.imwrite('../data/pose_'+name,image2)
+        cv2.imwrite('../../data/'+name,image2)
+        print('../../data/'+name)
         bgimg = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_BGR2RGB)
         bgimg = cv2.resize(bgimg, (e.heatMat.shape[1], e.heatMat.shape[0]), interpolation=cv2.INTER_AREA)
 

@@ -410,14 +410,25 @@ class TfPoseEstimator:
             npimg = np.copy(npimg)
         image_h, image_w = npimg.shape[:2]
         centers = {}
+        print('humanlen',len(humans))
         for human in humans:
+            max_x = 0
+            min_x = 10000
+            max_y = 0
+            min_y = 10000
             # draw point
             for i in range(common.CocoPart.Background.value):
                 if i not in human.body_parts.keys():
                     continue
 
                 body_part = human.body_parts[i]
-                center = (int(body_part.x * image_w + 0.5), int(body_part.y * image_h + 0.5))
+                new_x = int(body_part.x*image_w+0.5)
+                new_y = int(body_part.y*image_h+0.5)
+                max_x = max(new_x,max_x)
+                min_x = min(new_x,min_x)
+                max_y = max(max_y,new_y)
+                min_y = min(min_y,new_y)
+                center = (new_x, new_y)
                 centers[i] = center
                 cv2.circle(npimg, center, 3, common.CocoColors[i], thickness=3, lineType=8, shift=0)
 
@@ -428,8 +439,12 @@ class TfPoseEstimator:
 
                 # npimg = cv2.line(npimg, centers[pair[0]], centers[pair[1]], common.CocoColors[pair_order], 3)
                 cv2.line(npimg, centers[pair[0]], centers[pair[1]], common.CocoColors[pair_order], 3)
-
-        return npimg
+            #box = human.get_upper_body_box(image_w,image_h)
+            margin = 20
+            cv2.rectangle(npimg,(min_x-margin,max_y+margin),(max_x+margin,min_y-margin),(0,0,255),3)
+            #print('humans body box',human.get_upper_body_box(image_w,image_h))
+            print('image',image_h,image_w)
+        return cv2.cvtColor(npimg,cv2.COLOR_BGR2RGB)
 
     def _get_scaled_img(self, npimg, scale):
         get_base_scale = lambda s, w, h: max(self.target_size[0] / float(h), self.target_size[1] / float(w)) * s
