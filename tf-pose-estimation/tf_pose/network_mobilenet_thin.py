@@ -7,6 +7,7 @@ from tf_pose import network_base
 
 class MobilenetNetworkThin(network_base.BaseNetwork):
     def __init__(self, inputs, trainable=True, conv_width=1.0, conv_width2=None):
+        print('tf version: ',tf.__version__)
         self.conv_width = conv_width
         self.conv_width2 = conv_width2 if conv_width2 else conv_width
         network_base.BaseNetwork.__init__(self, inputs, trainable)

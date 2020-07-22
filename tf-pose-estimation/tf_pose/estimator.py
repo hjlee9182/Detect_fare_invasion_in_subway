@@ -411,7 +411,10 @@ class TfPoseEstimator:
         image_h, image_w = npimg.shape[:2]
         centers = {}
         print('humanlen',len(humans))
-        for human in humans:
+        black_li = []
+        normal_li = []
+        for idx,human in enumerate(humans):
+            black = np.zeros((image_h,image_w,3))
             max_x = 0
             min_x = 10000
             max_y = 0
@@ -431,7 +434,7 @@ class TfPoseEstimator:
                 center = (new_x, new_y)
                 centers[i] = center
                 cv2.circle(npimg, center, 3, common.CocoColors[i], thickness=3, lineType=8, shift=0)
-
+                cv2.circle(black,center,3,common.CocoColors[i],thickness=3,lineType=8,shift=0)
             # draw line
             for pair_order, pair in enumerate(common.CocoPairsRender):
                 if pair[0] not in human.body_parts.keys() or pair[1] not in human.body_parts.keys():
@@ -439,12 +442,21 @@ class TfPoseEstimator:
 
                 # npimg = cv2.line(npimg, centers[pair[0]], centers[pair[1]], common.CocoColors[pair_order], 3)
                 cv2.line(npimg, centers[pair[0]], centers[pair[1]], common.CocoColors[pair_order], 3)
+                cv2.line(black, centers[pair[0]], centers[pair[1]], common.CocoColors[pair_order], 3)
             #box = human.get_upper_body_box(image_w,image_h)
             margin = 20
-            cv2.rectangle(npimg,(min_x-margin,max_y+margin),(max_x+margin,min_y-margin),(0,0,255),3)
+            min_y = max(0,min_y-margin)
+            max_y = min(image_h,max_y+margin)
+            min_x = max(0,min_x-margin)
+            max_x = min(image_w,max_x+margin)
+            crop = black[min_y:max_y,min_x:max_x]
+            crop2 = npimg[min_y:max_y,min_x:max_x]
+            black_li.append(crop)
+            normal_li.append(cv2.cvtColor(crop2,cv2.COLOR_BGR2RGB))
+            #cv2.rectangle(npimg,(min_x-margin,max_y+margin),(max_x+margin,min_y-margin),(0,0,255),3)
             #print('humans body box',human.get_upper_body_box(image_w,image_h))
             print('image',image_h,image_w)
-        return cv2.cvtColor(npimg,cv2.COLOR_BGR2RGB)
+        return cv2.cvtColor(npimg,cv2.COLOR_BGR2RGB),black_li,normal_li
 
     def _get_scaled_img(self, npimg, scale):
         get_base_scale = lambda s, w, h: max(self.target_size[0] / float(h), self.target_size[1] / float(w)) * s

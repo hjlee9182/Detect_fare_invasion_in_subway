@@ -40,7 +40,9 @@ if __name__ == '__main__':
     #print(os.listdir('../data/pose_data'))
     # estimate human poses from a single image !
     last = args.folder.split('/')[-1]
-    change_folder = '../data/pose_data/pose_'+last
+    #change_folder = '../../data/pose_data/pose_'+last
+    black_folder = '../../data/pose_data/black_crop_'+last
+    normal_folder = '../../data/pose_data/crop_'+last
     for i in os.listdir(args.folder):
         print(i)
         image = common.read_imgfile(args.folder+'/'+i, None, None)
@@ -54,7 +56,7 @@ if __name__ == '__main__':
 
         #logger.info('inference image: %s in %.4f seconds.' % (args.image, elapsed))
 
-        image = TfPoseEstimator.draw_humans(image, humans, imgcopy=False)
+        image,black,normal = TfPoseEstimator.draw_humans(image, humans, imgcopy=False)
         #print('hi')
         #name = args.image.split('/')[-1]
         import matplotlib.pyplot as plt
@@ -63,6 +65,10 @@ if __name__ == '__main__':
         a = fig.add_subplot(2, 2, 1)
         a.set_title('Result')
         image2 = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
-        cv2.imwrite(change_folder+'/'+i,image2)
+        #cv2.imwrite(change_folder+'/'+i,image2)
+        for idx,img in enumerate(black):
+            cv2.imwrite(black_folder+'/'+i.split('.')[0]+'_'+str(idx+1)+'.jpg',img)
+        for idx,img in enumerate(normal):
+            cv2.imwrite(normal_folder+'/'+i.split('.')[0]+'_'+str(idx+1)+'.jpg',cv2.cvtColor(img,cv2.COLOR_BGR2RGB))
         print(i+' save finish')
         #plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))

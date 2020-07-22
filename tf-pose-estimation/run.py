@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 import time
-
+import tensorflow as tf
 from tf_pose import common
 import cv2
 import numpy as np
@@ -49,9 +49,10 @@ if __name__ == '__main__':
 
     logger.info('inference image: %s in %.4f seconds.' % (args.image, elapsed))
 
-    image = TfPoseEstimator.draw_humans(image, humans, imgcopy=False)
+    image,black_li,normal_li = TfPoseEstimator.draw_humans(image, humans, imgcopy=False)
     name = args.image.split('/')[-1]
     print('name',name)
+    print('tf version : ',tf.__version__)
     try:
         import matplotlib.pyplot as plt
         print('Im in here')
@@ -61,6 +62,10 @@ if __name__ == '__main__':
         image2 = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
         #plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
         cv2.imwrite('../../data/'+name,image2)
+        for idx,img in enumerate(black_li):
+            cv2.imwrite('../../data/'+name.split('.')[0]+'_'+str(idx)+'.jpg',img)
+        for idx,img in enumerate(normal_li):
+            cv2.imwrite('../../data/'+name.split('.')[0]+'_normal'+str(idx)+'.jpg',cv2.cvtColor(img,cv2.COLOR_BGR2RGB))
         print('../../data/'+name)
         bgimg = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_BGR2RGB)
         bgimg = cv2.resize(bgimg, (e.heatMat.shape[1], e.heatMat.shape[0]), interpolation=cv2.INTER_AREA)
