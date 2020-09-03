@@ -1,4 +1,4 @@
-#import tensorflow as tf
+import tensorflow as tf
 
 #from tensorflow import keras
 from keras.applications import MobileNet
@@ -46,8 +46,8 @@ print(model.summary())
 
 #data generator
 #please use Absolute path
-train_data_dir = ' ' #train image directory
-valid_data_dir = ' ' #validation image directory
+train_data_dir = '/home/jmpark/g_project/test/Detect_fare_invasion_in_subway/Datasets/train_data' 
+valid_data_dir = '/home/jmpark/g_project/test/Detect_fare_invasion_in_subway/Datasets/valid_data' 
 
 train_dataGenerator = ImageDataGenerator( 
 			rescale=1./255,
@@ -57,7 +57,7 @@ train_dataGenerator = ImageDataGenerator(
 			horizontal_flip=True,
 			fill_mode='nearest')
 	
-valid_dataGenerator = ImageDataGenerator(resclae=1./255)
+valid_dataGenerator = ImageDataGenerator(rescale=1./255)
 
 train_gen = train_dataGenerator.flow_from_directory(
 			train_data_dir,
@@ -95,12 +95,12 @@ lr_reduction = ReduceLROnPlateau(
 callbacks = [cb_checkpoint,cb_earlyStopping,lr_reduction]
 
 #model compile and train
-model.complie(loss='categorical_crossentropy',optimizer=Adam(lr=learning_rate),metrics=['accuracy'])
+model.compile(loss='categorical_crossentropy',optimizer=Adam(lr=learning_rate),metrics=['accuracy'])
 
-nb_train_data = os.walk('train_data_dir').next()[2]
-nb_valid_data = os.walk('valid_data_dir').next()[2]
+nb_train_data = len(next(os.walk(train_data_dir))[2])
+nb_valid_data = len(next(os.walk(valid_data_dir))[2])
 
-history = model.fit_genorator(
+history = model.fit_generator(
 			train_gen,
 			steps_per_epoch=nb_train_data//batch_size,
 			epochs=epochs,
