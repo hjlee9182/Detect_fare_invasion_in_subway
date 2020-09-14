@@ -12,7 +12,8 @@ from tf_pose import common
 from tf_pose.common import CocoPart
 from tf_pose.tensblur.smoother import Smoother
 import tensorflow.contrib.tensorrt as trt
-
+from tensorflow.keras.preprocessing.image import img_to_array
+from PIL import Image
 try:
     from tf_pose.pafprocess import pafprocess
 except ModuleNotFoundError as e:
@@ -40,6 +41,12 @@ def _include_part(part_list, part_idx):
             return True, part
     return False, None
 
+def img_preprocessing(image):
+    image = image.resize((224,224))
+    image = img_to_array(image)/255
+    image = np.expand_dims(image,axis=0)
+
+    return image
 
 class Human:
     """
@@ -405,16 +412,20 @@ class TfPoseEstimator:
         return npimg_q
 
     @staticmethod
-    def draw_humans(npimg, humans, imgcopy=False):
+    def draw_humans(npimg, humans,model, imgcopy=False):
         if imgcopy:
             npimg = np.copy(npimg)
         image_h, image_w = npimg.shape[:2]
         centers = {}
-        print('humanlen',len(humans))
         black_li = []
         normal_li = []
+        no = 0
         for idx,human in enumerate(humans):
-            black = np.zeros((image_h,image_w,3))
+            if len(human.body_parts.keys())<=12:
+                no+=1
+                continue
+            copyimg = np.copy(npimg)
+            #black = np.zeros((image_h,image_w,3))
             max_x = 0
             min_x = 10000
             max_y = 0
@@ -434,7 +445,7 @@ class TfPoseEstimator:
                 center = (new_x, new_y)
                 centers[i] = center
                 cv2.circle(npimg, center, 3, common.CocoColors[i], thickness=3, lineType=8, shift=0)
-                cv2.circle(black,center,3,common.CocoColors[i],thickness=3,lineType=8,shift=0)
+                #cv2.circle(black,center,3,common.CocoColors[i],thickness=3,lineType=8,shift=0)
             # draw line
             for pair_order, pair in enumerate(common.CocoPairsRender):
                 if pair[0] not in human.body_parts.keys() or pair[1] not in human.body_parts.keys():
@@ -442,21 +453,30 @@ class TfPoseEstimator:
 
                 # npimg = cv2.line(npimg, centers[pair[0]], centers[pair[1]], common.CocoColors[pair_order], 3)
                 cv2.line(npimg, centers[pair[0]], centers[pair[1]], common.CocoColors[pair_order], 3)
-                cv2.line(black, centers[pair[0]], centers[pair[1]], common.CocoColors[pair_order], 3)
-            #box = human.get_upper_body_box(image_w,image_h)
+                #cv2.line(black, centers[pair[0]], centers[pair[1]], common.CocoColors[pair_order], 3)
             margin = 20
             min_y = max(0,min_y-margin)
             max_y = min(image_h,max_y+margin)
             min_x = max(0,min_x-margin)
             max_x = min(image_w,max_x+margin)
-            crop = black[min_y:max_y,min_x:max_x]
-            crop2 = npimg[min_y:max_y,min_x:max_x]
-            black_li.append(crop)
-            normal_li.append(cv2.cvtColor(crop2,cv2.COLOR_BGR2RGB))
-            #cv2.rectangle(npimg,(min_x-margin,max_y+margin),(max_x+margin,min_y-margin),(0,0,255),3)
+            #crop = black[min_y:max_y,min_x:max_x]
+            crop = copyimg[min_y:max_y,min_x:max_x]
+            crop = cv2.cvtColor(crop,cv2.COLOR_BGR2RGB)
+            crop = Image.fromarray(crop,'RGB')
+            crop = img_preprocessing(crop)
+            output = np.argmax(model.predict(crop))
+
+           # black_li.append(crop)
+            #normal_li.append(cv2.cvtColor(crop2,cv2.COLOR_BGR2RGB))
+            if output==2:
+                cv2.rectangle(npimg,(min_x-margin,max_y+margin),(max_x+margin,min_y-margin),(0,255,0),3)
+            else:
+                cv2.rectangle(npimg,(min_x-margin,max_y+margin),(max_x+margin,min_y-margin),(0,0,255),3)
             #print('humans body box',human.get_upper_body_box(image_w,image_h))
-            print('image',image_h,image_w)
-        return cv2.cvtColor(npimg,cv2.COLOR_BGR2RGB),black_li,normal_li
+            #print('image',image_h,image_w)
+        if no==len(humans):
+            return npimg,0,0
+        return npimg,1,1
 
     def _get_scaled_img(self, npimg, scale):
         get_base_scale = lambda s, w, h: max(self.target_size[0] / float(h), self.target_size[1] / float(w)) * s
@@ -561,7 +581,8 @@ class TfPoseEstimator:
 
     def inference(self, npimg, resize_to_default=True, upsample_size=1.0):
         if npimg is None:
-            raise Exception('The image is not valid. Please check your image exists.')
+            return False
+            #raise Exception('The image is not valid. Please check your image exists.')
 
         if resize_to_default:
             upsample_size = [int(self.target_size[1] / 8 * upsample_size), int(self.target_size[0] / 8 * upsample_size)]
