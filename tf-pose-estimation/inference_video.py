@@ -42,6 +42,8 @@ if __name__ == '__main__':
     parser.add_argument('--show-process', type=bool, default=False,
                         help='for debug purpose, if enabled, speed for inference is dropped.')
     parser.add_argument('--showBG', type=bool, default=True, help='False to show skeleton only.')
+    parser.add_argument('--num',type=int,default = 3)
+    parser.add_argument('--weight',type=str,default= 'weight.hdf5')
     args = parser.parse_args()
 
     logger.debug('initialization %s : %s' % (args.model, get_graph_path(args.model)))
@@ -49,9 +51,10 @@ if __name__ == '__main__':
     e = TfPoseEstimator(get_graph_path(args.model), target_size=(w, h))
     
     mobilenet = MobileNet(include_top=False, input_shape=(224,224,3))
-    fc = addTopModelMobileNet(mobilenet,3)
+    output_num = args.num
+    fc = addTopModelMobileNet(mobilenet,output_num)
     mobile = Model(inputs=mobilenet.input,outputs=fc)
-    mobile.load_weights('weight.hdf5')
+    mobile.load_weights('./weight/'+args.weight)
    
     cap = cv2.VideoCapture(args.video)
 
@@ -70,7 +73,7 @@ if __name__ == '__main__':
 
         humans = e.inference(image,resize_to_default=(w>0 and h>0), upsample_size=4.0)
 
-        image,a,b = TfPoseEstimator.draw_humans(image,humans,mobile,imgcopy=False)
+        image,a,b = TfPoseEstimator.draw_humans(image,humans,mobile,output_num,imgcopy=False)
 
         cv2.putText(image,"FPS: %f" % (1.0 / (time.time() - fps_time)), (10,10), cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,255,0),2)
         

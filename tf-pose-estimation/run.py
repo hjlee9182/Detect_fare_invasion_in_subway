@@ -61,11 +61,11 @@ if __name__ == '__main__':
         a.set_title('Result')
         image2 = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
         #plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        cv2.imwrite('../../data/'+name,image2)
-        for idx,img in enumerate(black_li):
-            cv2.imwrite('../../data/'+name.split('.')[0]+'_'+str(idx)+'.jpg',img)
-        for idx,img in enumerate(normal_li):
-            cv2.imwrite('../../data/'+name.split('.')[0]+'_normal'+str(idx)+'.jpg',cv2.cvtColor(img,cv2.COLOR_BGR2RGB))
+        cv2.imwrite('../../data/c_'+name,image2)
+        #for idx,img in enumerate(black_li):
+        #    cv2.imwrite('../../data/'+name.split('.')[0]+'_'+str(idx)+'.jpg',img)
+        #for idx,img in enumerate(normal_li):
+        #    cv2.imwrite('../../data/'+name.split('.')[0]+'_normal'+str(idx)+'.jpg',cv2.cvtColor(img,cv2.COLOR_BGR2RGB))
         print('../../data/'+name)
         bgimg = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_BGR2RGB)
         bgimg = cv2.resize(bgimg, (e.heatMat.shape[1], e.heatMat.shape[0]), interpolation=cv2.INTER_AREA)

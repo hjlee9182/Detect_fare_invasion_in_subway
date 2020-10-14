@@ -412,7 +412,7 @@ class TfPoseEstimator:
         return npimg_q
 
     @staticmethod
-    def draw_humans(npimg, humans,model, imgcopy=False):
+    def draw_humans(npimg, humans,model,output_num, imgcopy=False):
         if imgcopy:
             npimg = np.copy(npimg)
         image_h, image_w = npimg.shape[:2]
@@ -468,10 +468,15 @@ class TfPoseEstimator:
 
            # black_li.append(crop)
             #normal_li.append(cv2.cvtColor(crop2,cv2.COLOR_BGR2RGB))
-            if output==2:
+            if output==0:
                 cv2.rectangle(npimg,(min_x-margin,max_y+margin),(max_x+margin,min_y-margin),(0,255,0),3)
-            else:
-                cv2.rectangle(npimg,(min_x-margin,max_y+margin),(max_x+margin,min_y-margin),(0,0,255),3)
+            elif output==1:
+                cv2.rectangle(npimg,(min_x-margin,max_y+margin),(max_x+margin,min_y-margin),(255,0,0),3)
+            elif output==2:
+                cv2.rectangle(npimg,(min_x-margin,max_y+margin),(max_x+margin,min_y-margin),(255,255,255),3)
+            if output_num==4:
+                if output==3:
+                    cv2.rectangle(npimg,(min_x-margin,max_y+margin),(max_x+margin,min_y-margin),(0,0,255),3)
             #print('humans body box',human.get_upper_body_box(image_w,image_h))
             #print('image',image_h,image_w)
         if no==len(humans):
